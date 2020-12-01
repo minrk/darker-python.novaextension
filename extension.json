@@ -1,0 +1,47 @@
+{
+  "identifier": "net.minrk.darkerpython",
+  "name": "Darker Python",
+  "organization": "minrk",
+  "description": "Nova formatter Extension for darker (incremental black formatter)",
+  "version": "1.0",
+  "categories": ["commands", "formatters"],
+
+  "main": "main.js",
+
+  "activationEvents": ["onLanguage:python"],
+
+  "entitlements": {
+    "filesystem": "readwrite",
+    "process": true
+  },
+
+  "commands": {
+    "editor": [
+      {
+        "title": "Darker Python",
+        "command": "darker-python.darker-file"
+      }
+    ]
+  },
+
+  "config": [
+    {
+      "key": "darker-python.executable",
+      "title": "Path to darker, if not on $PATH",
+      "type": "string",
+      "default": "darker"
+    },
+    {
+      "key": "darker-python.formatOnSave",
+      "title": "Format on save (tracked files only)",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "key": "darker-python.formatUntrackedOnSave",
+      "title": "Format untracked files (with black) on save",
+      "type": "boolean",
+      "default": false
+    }
+  ]
+}
