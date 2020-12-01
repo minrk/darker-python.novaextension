@@ -3,6 +3,8 @@
   "name": "Darker Python",
   "organization": "minrk",
   "description": "Nova formatter Extension for darker (incremental black formatter)",
+  "bugs": "https://github.com/minrk/darker-python.novaextension/issues",
+  "repository": "https://github.com/minrk/darker-python.novaextension",
   "version": "1.0",
   "categories": ["commands", "formatters"],
 
