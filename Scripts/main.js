@@ -22,7 +22,97 @@ function notify(message) {
   nova.notifications.add(request);
 }
 
+async function run(options) {
+  // run a process, capturing output and return status code
+  // as {status, output}
+  var process = new Process("/usr/bin/env", options);
+  var lines = [];
+
+  function collect(data) {
+    if (data) {
+      lines.push(data);
+    }
+  }
+  process.onStdout(collect);
+  process.onStderr(collect);
+
+  // console.log(`Running ${options.args.join(" ")}`);
+  let p = new Promise((resolve) => {
+    process.onDidExit(function (status) {
+      resolve({
+        status: status,
+        output: lines.join(""),
+      });
+    });
+  });
+  process.start();
+  return await p;
+}
+
+async function gitStatus(path) {
+  // git status of a file
+  // returns one of: UNTRACKED, MODIFIED, UNCHANGED
+  var options = {
+    args: ["git", "status", "--porcelain", path],
+    cwd: nova.path.dirname(path),
+  };
+  var r = await run(options);
+
+  if (r.status) {
+    // git status returns an error code if not a repo
+    // check for specific errors?
+    // notify(`${options.args.join(" ")} exited with ${status}\n${output}`);
+    return UNTRACKED;
+  } else if (r.output.slice(0, 2) === "??") {
+    // in a repo, but untracked gives `?? /path`
+    return UNTRACKED;
+  } else if (r.output.length == 0) {
+    // no output means no changes
+    return UNCHANGED;
+  } else {
+    // typically `M /path`, maybe others?
+    // TODO: check for M?
+    return MODIFIED;
+  }
+}
+
+async function darker(path, status) {
+  if (!status) {
+    // status may have been called earlier, e.g. in darkerOnSave
+    // avoid calling it twice if we don't need to
+    status = await gitStatus(path);
+  }
+  let exe = nova.config.get("darker-python.executable");
+  switch (status) {
+    case MODIFIED:
+      break;
+    case UNTRACKED:
+      exe = nova.path.join(nova.path.dirname(exe), "black");
+      break;
+    case UNCHANGED:
+      return;
+    default:
+      throw new Error(`Invalid git status: ${status}`);
+  }
+
+  var options = {
+    args: [exe, path],
+    cwd: nova.path.dirname(path),
+  };
+
+  console.log(`Formatting ${path} with ${exe}`);
+  let result = await run(options);
+  let message = `${exe} exited with status ${result.status}:\n${result.output}`;
+  console.log(message);
+  if (result.status) {
+    notify(result.output);
+  }
+}
+
 async function darkerOnSave(editor) {
+  if (editor.document.syntax !== "python") {
+    return;
+  }
   if (
     !(
       nova.config.get("darker-python.formatOnSave") ||
@@ -50,90 +140,11 @@ async function darkerOnSave(editor) {
   }
 }
 
-async function darker(path, status) {
-  if (!status) {
-    let status = await gitStatus(path);
-  }
-  let exe = nova.config.get("darker-python.executable");
-  switch (status) {
-    case MODIFIED:
-      break;
-    case UNTRACKED:
-      exe = nova.path.join(nova.path.dirname(exe), "black");
-      break;
-    case UNCHANGED:
-      return;
-  }
-
-  var options = {
-    args: [exe, path],
-    cwd: nova.path.dirname(path),
-  };
-
-  console.log(`Formatting ${status} file with ${exe}`);
-  var process = new Process("/usr/bin/env", options);
-  var lines = [];
-
-  function collect(data) {
-    if (data) {
-      lines.push(data);
-    }
-  }
-  process.onStdout(collect);
-  process.onStderr(collect);
-
-  process.onDidExit(function (status) {
-    var string = `${exe} exited with status ${status}:\n` + lines.join("");
-    console.log(string);
-    if (status) {
-      notify(string);
-    }
-  });
-
-  process.start();
-}
-
-async function gitStatus(path) {
-  // git status of a file
-  // returns one of: UNTRACKED, MODIFIED, UNCHANGED
-  var options = {
-    args: ["git", "status", "--porcelain", path],
-    cwd: nova.path.dirname(path),
-  };
-  var process = new Process("/usr/bin/env", options);
-  var lines = [];
-
-  function collect(data) {
-    if (data) {
-      lines.push(data);
-    }
-  }
-  process.onStdout(collect);
-  process.onStderr(collect);
-
-  let p = new Promise((resolve) => {
-    process.onDidExit(function (status) {
-      const output = lines.join("").trim();
-      if (status) {
-        notify(`${options.args.join(" ")} exited with ${status}\n${output}`);
-      }
-      let result;
-      if (output.length == 0) {
-        result = UNCHANGED;
-      } else if (output.slice(0, 2) === "??") {
-        result = UNTRACKED;
-      } else {
-        // TODO: error handling here?
-        result = MODIFIED;
-      }
-      resolve(result);
-    });
-  });
-  process.start();
-  return await p;
-}
-
 nova.commands.register("darker-python.darker-file", async (editor) => {
   // Begin an edit session
-  await darker(editor.document.path);
+  try {
+    await darker(editor.document.path);
+  } catch (e) {
+    console.error(e);
+  }
 });
