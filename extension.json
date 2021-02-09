@@ -20,8 +20,20 @@
   "commands": {
     "editor": [
       {
-        "title": "Darker Python",
-        "command": "darker-python.darker-file"
+        "title": "Format with Darker",
+        "command": "darker-python.darker-file",
+        "shortcut": "cmd-shift-D",
+        "filters": {
+          "syntaxes": ["python"]
+        }
+      },
+      {
+        "title": "Format with Black",
+        "command": "darker-python.black-file",
+        "shortcut": "cmd-shift-B",
+        "filters": {
+          "syntaxes": ["python"]
+        }
       }
     ]
   },

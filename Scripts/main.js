@@ -94,7 +94,16 @@ async function darker(path, status) {
     default:
       throw new Error(`Invalid git status: ${status}`);
   }
+  await format(exe, path);
+}
 
+async function black(path) {
+  let darker = nova.config.get("darker-python.executable");
+  let black = nova.path.join(nova.path.dirname(darker), "black");
+  return await format(black, path);
+}
+
+async function format(exe, path) {
   var options = {
     args: [exe, path],
     cwd: nova.path.dirname(path),
@@ -141,9 +150,18 @@ async function darkerOnSave(editor) {
 }
 
 nova.commands.register("darker-python.darker-file", async (editor) => {
-  // Begin an edit session
+  // Format with darker (fallback on black)
   try {
     await darker(editor.document.path);
+  } catch (e) {
+    console.error(e);
+  }
+});
+
+nova.commands.register("darker-python.black-file", async (editor) => {
+  // format with black
+  try {
+    await black(editor.document.path);
   } catch (e) {
     console.error(e);
   }
