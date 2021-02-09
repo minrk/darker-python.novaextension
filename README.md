@@ -6,6 +6,8 @@ Darker applies black formatting only to changed parts of the code.
 If a file is untracked by version control,
 darker will run black on the whole file instead.
 
+This extension provides commands to format with both `darker` and `black`.
+
 
 ## Requirements
 
@@ -22,8 +24,7 @@ To apply `darker` to the current Python editor:
 
 You can also enable darker on save (can be toggled separately for tracked and untracked files) via Extension preferences.
 
-
-![](https://nova.app/images/en/light/tools/sidebars.png)
+![screenshot](Images/screenshot.png)
 
 ### Configuration
 
