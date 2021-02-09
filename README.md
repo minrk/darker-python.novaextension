@@ -24,7 +24,7 @@ To apply `darker` to the current Python editor:
 
 You can also enable darker on save (can be toggled separately for tracked and untracked files) via Extension preferences.
 
-![screenshot](Images/screenshot.png)
+![screenshot](https://github.com/minrk/darker-python.novaextension/raw/main/Images/screenshot.png)
 
 ### Configuration
 

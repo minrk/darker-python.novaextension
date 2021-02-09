@@ -5,7 +5,7 @@
   "description": "Nova formatter Extension for darker (incremental black formatter)",
   "bugs": "https://github.com/minrk/darker-python.novaextension/issues",
   "repository": "https://github.com/minrk/darker-python.novaextension",
-  "version": "1.2",
+  "version": "1.2.1",
   "categories": ["commands", "formatters"],
 
   "main": "main.js",
